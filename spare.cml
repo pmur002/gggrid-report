@@ -1,0 +1,301 @@
+
+
+  <p>
+    The 'grid' grob can be arbitrarily complex.  For example,
+    the following code adds a base 'graphics' plot as an inset
+    in the top-right quarter of a 'ggplot2' plot.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE" fig.keep="last">
+library(gridGraphics)
+vp <- viewport(x=1, y=1, width=.5, height=.5, 
+               just=c("right", "top"))
+gplot <- function() {
+    par(cex=.7, mex=.7, mar=c(5, 4, 1, 1))
+    plot(mpg ~ disp, mtcars)
+}
+grob <- gTree(children=gList(echoGrob(gplot)), vp=vp)
+ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    grid_panel(grob)
+  </rcode>
+
+
+  <rcode>
+annotation <- function(data, coords) {
+    text <- textGrob("most efficient",
+                     x=unit(1, "npc") - unit(5, "mm"), 
+                     y=unit(1, "npc") - unit(2, "lines"),
+                     just="right")
+    line <- segmentsGrob(coords$x[which.max(coords$y)],
+                         max(coords$y),
+                         unit(1, "npc") - unit(5, "mm") - 
+                             grobWidth(text), 
+                         unit(1, "npc") - unit(2, "lines"),
+                         gp=gpar(col="grey"))
+    gTree(children=gList(line, text))
+}
+  </rcode>
+  <rcode fig.width="5" fig.height="3" message="FALSE" fig.keep="last">
+ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    grid_panel(annotation)
+  </rcode>
+  <p>
+    Works for facetting too (with different answers).
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE" fig.keep="last">
+ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    facet_wrap("am") +
+    grid_panel(annotation)
+  </rcode>
+  <p>
+    Pass aesthetics just to <code>grid_panel</code>?
+  </p>
+  <rcode>
+mtcars$name <- rownames(mtcars)
+nameVehicle <- function(data, coords) {
+    text <- textGrob(data$label[which.max(coords$y)],
+                     x=unit(1, "npc") - unit(5, "mm"), 
+                     y=unit(1, "npc") - unit(2, "lines"),
+                     just="right")
+    line <- segmentsGrob(coords$x[which.max(coords$y)],
+                         max(coords$y),
+                         unit(1, "npc") - unit(5, "mm") - 
+                             grobWidth(text), 
+                         unit(1, "npc") - unit(2, "lines"),
+                         gp=gpar(col="grey"))
+    gTree(children=gList(line, text))
+}
+  </rcode>
+  <rcode fig.width="5" fig.height="3" message="FALSE" fig.keep="last">
+ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    facet_wrap("am") +
+    grid_panel(nameVehicle, aes(label=name))
+  </rcode>  
+  <p>
+    Two lines from separate panels to SINGLE 
+    global label OUTSIDE plot entirely ?
+    Lay down invisible markers in 'ggplot2' plot then draw
+    to them afterwards?
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE" fig.keep="last" results="hide">
+marker <- function(data, coords) {
+    nullGrob(coords$x[which.max(coords$y)],
+             max(coords$y),
+             name="mark")
+}
+g <- ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    facet_wrap("am") +
+    grid_panel(marker) +
+    coord_cartesian(clip="off")
+grid.newpage()
+pushViewport(viewport(y=0, 
+                      height=unit(1, "npc") - unit(2, "lines"), 
+                      just="bottom", 
+                      name="ggplot"))
+plot(g, newpage=FALSE)
+upViewport()
+grid.force()
+markers <- grid.grep("mark", global=TRUE, viewports=TRUE)
+text <- textGrob("most efficient ",
+                 x=unit(1, "lines"),
+                 y=unit(1, "npc") - unit(1, "lines"),
+                 just=c("left", "top"))
+grid.draw(text)
+drawLine <- function(x) {
+    grid.move.to(grobX(text, 0), grobY(text, 0))
+    depth <- downViewport(attr(x, "vpPath"))
+    m <- grid.get(x)
+    grid.line.to(m$x, m$y, gp=gpar(col="grey"))
+    upViewport(depth)
+}
+lapply(markers, drawLine)
+  </rcode>  
+  <p>
+    Could take this further and calculate <code>deviceLoc()</code>
+    on the null grobs and then draw whatever we like relative
+    to those locations (e.g., curvey lines).
+  </p>
+
+
+
+
+  <p>
+    Simple example with text in top-right corner.
+    Just cannot do it easily with existing packages!?
+    (because do not have access to 'grid' units, for example).
+  </p>
+  <rcode fig.width="4" fig.height="4">
+label <- textGrob("Test", 
+                  unit(1, "npc") - unit(2, "mm"),
+                  unit(1, "npc") - unit(2, "mm"),
+                  just = c("right", "top"))
+
+ggplot(mtcars) +
+    geom_point(aes(disp, mpg)) +
+    grid_panel(grob = label)
+  </rcode>
+  <p>
+    computed label example from 787 lab 8:
+  </p>
+  <rcode warning="FALSE" message="FALSE">
+cases <- read.csv("singapore-cases.csv")
+cases$Age <- as.numeric(cases$Age)
+contacts <- read.csv("singapore-contacts.csv")
+
+library(tidygraph)
+nodes <- cases[cases$Case %in% contacts$case |
+               cases$Case %in% contacts$contact, ]
+clusterMap <- c("Family member"="relation",
+                "Family Member"="relation",
+                "Father - Son"="relation",
+                "Daughter - Mother"="relation",
+                "Husband - Wife"="relation",
+                "Mother - Son"="relation")
+edges <- data.frame(from=match(contacts$case, nodes$Case),
+                    to=match(contacts$contact, nodes$Case),
+                    type=clusterMap[contacts$label])
+edges$type[is.na(edges$type)] <- "contact"
+casesGraph <- tbl_graph(nodes, edges)
+
+graphComponents <- mutate(activate(casesGraph, nodes), 
+                          group = group_components())
+connectedCases <- convert(graphComponents, to_subgraph, group %in% 1:6)
+
+connectedCaseNodes <- data.frame(connectedCases)
+  </rcode>
+  <p>
+    'gggrid' version
+  </p>
+  <rcode fig.width="4" fig.height="4" warning="FALSE">
+genderCounts <- as.data.frame(table(Gender=connectedCaseNodes$Gender))
+
+label <- function(data, coords) {
+    textGrob(paste(data$count, "cases"),
+             x=unit(1, "npc") - unit(2, "mm"),
+             y=unit(1, "npc") - unit(2, "mm"),
+             just=c("right", "top"))
+}
+
+ggplot(connectedCaseNodes) +
+    geom_dotplot(aes(x=Age), binwidth=1) +
+    grid_panel(aes(count=Freq), data=genderCounts, grob=label) +
+    facet_wrap(vars(Gender), ncol=1)
+  </rcode>
+  <p>
+    Compare with code used in 787 lab 8.
+    The amount of typing is similar, with the extra code above 
+    providing exactly the missing functionality of 
+    precise text positioning via units
+    (instead of having to position relative to the 
+    axis scales).
+  </p>
+  <rcode fig.width="4" fig.height="4" warning="FALSE">
+genderCounts <- as.data.frame(table(Gender=connectedCaseNodes$Gender))
+genderCounts$label <- paste(genderCounts$Freq, "cases")
+
+ggplot(connectedCaseNodes, aes(x=Age)) +
+    geom_dotplot(binwidth=1) +
+    geom_text(data=genderCounts,
+              aes(label=label), x=100, y=1, hjust=1, vjust=1) +
+    facet_wrap(vars(Gender), ncol=1)    
+  </rcode>
+  <p>
+    NOTE that it is possible to get right into the corner
+    using <code>Inf</code> as the data value, but that is
+    still limited compared to using raw 'grid'.
+  </p>
+  <rcode fig.width="4" fig.height="4" warning="FALSE">
+ggplot(connectedCaseNodes, aes(x=Age)) +
+    geom_dotplot(binwidth=1) +
+    geom_text(data=genderCounts,
+              aes(label=label), x=Inf, y=Inf, hjust=1, vjust=1) +
+    facet_wrap(vars(Gender), ncol=1)        
+  </rcode>
+  <p>
+    Do example with gradients or clipping paths (new graphics features
+    that are not yet available via 'ggplot2' interface).
+  </p>
+  <rcode fig.width="4" fig.height="4" warning="FALSE">
+  </rcode>
+
+
+
+  <h2><a name="synergy">The best of both worlds</a></h2>
+  <p>
+    Clearly, 'ggplot2' provides an extraordinarily powerful 
+    data visualisation paradigm.  However, it hides 'grid' away
+    and does not make it easy to access 'grid'.
+  </p>
+  <p>
+    Now that we have justified the existence of 'gggrid' in terms
+    of providing unfettered access to 'grid' within a 'ggplot2' plot, 
+    we can turn our
+    attention to the positives of having access to a combination
+    of 'ggplot2' and 'grid'.  
+  </p>
+  <p>
+    We have been playing defence up to this point;
+    let's now start looking at the positives.
+  </p>
+  <p>
+    What sorts of things can we do when we use 'ggplot2' to split
+    the data up and create the arrangement of drawing regions
+    and coordinate systems (AND statistical transformations!)
+    (and draw some stuff) and then we
+    add further drawing with 'grid'?
+  </p>
+  <p>
+    Feed data + stats + trans + coords + graphical parameters 
+    to 'ggplot2' then play with the
+    resulting data and coords and viewports in <code>grid_panel()</code>
+    and <code>grid_group()</code>.
+  </p>
+  <p>
+    This SHOULD give examples that are infinitely better than,
+    for example,
+    my efforts from the past that have attempted to add
+    data-based drawing by faking or pre-calculating the 
+    data-to-NPC conversion on a 'ggplot2' plot
+    (because the plot coordinates are NOT available via the
+    'grid' viewport that 'ggplot2' sets up and that is 
+    accessible after the fact).
+    Easy to demonstrate that the viewport scales on a 'ggplot2'
+    plot are NOT the data scales.
+  </p>
+
+  <p>
+    Could contrast the slightly awkward 'ggplot2' approach of having
+    to provide a data set for simple annotations with the 
+    "impure" but easy 'gggrid' approach of just drawing what we
+    want where we want.
+  </p>
+
+
+
+  <p>
+    Use as example the right-edge labels of 
+    John Burns-Murdoch's 
+    <a href="https://twitter.com/jburnmurdoch/status/1237737352879112194?ref_src=twsrc%5Etfw%7Ctwcamp%5Etweetembed%7Ctwterm%5E1237737352879112194%7Ctwgr%5E%7Ctwcon%5Es1_&amp;ref_url=https%3A%2F%2Fcdn.embedly.com%2Fwidgets%2Fmedia.html%3Ftype%3Dtext2Fhtmlkey%3Da19fcc184b9711e1b4764040d3dc5c07schema%3Dtwitterurl%3Dhttps3A%2F%2Ftwitter.com%2Fjburnmurdoch%2Fstatus%2F1237737352879112194image%3Dhttps3A%2F%2Fi.embed.ly%2F1%2Fimage3Furl3Dhttps253A252F252Fpbs.twimg.com252Fmedia252FES1Te1PWsAM8sHi.jpg253Alarge26key3Da19fcc184b9711e1b4764040d3dc5c07">COVID plot</a>.
+    This would demo the usefulness of having access to the
+    transformed data ?  or the transformed coordinates?
+  </p>
+
+  <p>
+    Can use <code>grid_panel</code> and <code>grid_group()</code>
+    in the same plot!?
+  </p>
+  <p>
+    Does the plot region expand to fit grobs from <code>grid_panel</code>
+    or <code>grid_group</code>?
+  </p>
+
+  <p>
+    <code>grid_group()</code> goes beyond 'lattice' panel functions
+    and allows us to add drawing per group
+    (although there is <code>lattice::panel.superpose()</code>)
+  </p>
+  

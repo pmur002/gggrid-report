@@ -1,0 +1,894 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html>
+<head>
+  <style type="text/css">
+    @media print {
+      body { }
+      p.img { text-align: center; page-break-inside: avoid }
+      img.CC { display: inline }
+    }
+    @media screen {
+      body { max-width: 800px; margin: auto }
+      p.img { text-align: center }
+      img.CC { display: inline }
+    }
+    p.date {
+      font-size: smaller;
+      margin: 0;
+    }
+    p.versionHistory {
+      color: gray
+    }
+    p.versionHistory a {
+      color: gray
+    }
+    p.ref {
+      text-indent: -2em;
+      padding-left: 2em;
+    }
+    div.abstract {
+      font-style: italic;
+    }
+  </style>
+
+</head>
+<body>
+  <h1>'gggrid' it's g-g-great!<br/><span style="font-size: medium">Accessing 'grid' from 'ggplot2'</span></h1>
+  <p>
+    <span style="font-style: italic">by Paul Murrell</span>
+    <a href="http://orcid.org"><img alt="" src="https://www.stat.auckland.ac.nz/~paul/ORCID/ORCiD.png" style="width: 16px; height: 16px; vertical-align: middle" /></a> <span style="font-family: mono; font-size: small"><a href="http://orcid.org/0000-0002-3224-8858">http://orcid.org/0000-0002-3224-8858</a></span>
+  </p>
+  <p class="date">
+    Version 1:
+    <rcode echo="FALSE" results="asis">
+cat(format(Sys.Date(), "%A %d %B %Y"))
+    </rcode>
+  </p>
+
+  <rcode id="init" echo="FALSE" message="FALSE" results="hide">
+opts_chunk$set(comment=" ", tidy=FALSE, dpi=96)
+options(width=100)
+## For wonky desktop set up
+options(bitmapType="cairo")
+  </rcode>
+
+  <rcode echo="FALSE">
+    library(grid)
+  </rcode>
+
+  <hr/>
+  <p>
+    <a rel="license"
+    href="http://creativecommons.org/licenses/by/4.0/"><img class="CC"
+    alt="Creative Commons License" style="border-width:0"
+    src="https://i.creativecommons.org/l/by/4.0/88x31.png"/></a><br/><span
+    xmlns:dct="http://purl.org/dc/terms/"
+    property="dct:title">This document</span>
+    by <span xmlns:cc="http://creativecommons.org/ns#"
+    property="cc:attributionName">Paul
+    Murrell</span> is licensed under a <a rel="license"
+    href="http://creativecommons.org/licenses/by/4.0/">Creative
+    Commons Attribution 4.0 International License</a>.
+  </p>
+  <hr/>
+  <div class="abstract">
+    <p>
+      This report describes the 'gggrid' package, which provides
+      a convenient interface for making use of raw 'grid' functions
+      in combination with 'ggplot2'.      
+    </p>
+    <p>
+      The 'gggrid' package provides two functions,
+      <code>grid_panel()</code> and <code>grid_group()</code>,
+      both of which create a new layer in a 'ggplot2' plot.
+      The first argument to both functions is a 'grid' grob or a function that
+      generates a grob and that grob is added to the plot region 
+      of the 'ggplot2' plot.
+    </p>
+    <p>
+      For example, the following code adds a rectangle filled with
+      a semitransparent radial gradient to a "ggplot".
+    </p>
+  <rcode fig.width="3" fig.height="3" message="FALSE">
+library(gggrid)
+grad <- radialGradient(c("transparent", "black"), r2=.6)
+ggplot(mtcars) +
+    geom_point(aes(disp, mpg)) +
+    grid_panel(rectGrob(gp=gpar(fill=grad)))
+    </rcode>
+  </div>
+  
+  <toc/>
+
+  <h2><a name="intro">Introduction</a></h2>
+  <p>
+    The 'grid' package for R (<a href="#R"/>) 
+    provides low-level graphics functions 
+    for arranging and drawing basic shapes.  One useful feature
+    is the ability to specify the location of drawing using
+    a combination of coordinate systems.  For example,
+    the following code describes a text label with its top-right corner
+    exactly 5mm in from the top-right corner of wherever it is drawn.
+    The <code>y</code> value <code>unit(1, "npc") - unit(5, "mm")</code>
+    is how we can say "5mm down from the top" in 'grid'.
+  </p>
+  <rcode>
+library(grid)
+label <- textGrob("Label", 
+                  x=unit(1, "npc") - unit(5, "mm"),
+                  y=unit(1, "npc") - unit(5, "mm"),
+                  just=c("right", "top"))
+  </rcode>
+  <p>
+    In the following code, we draw a rectangle and then add the text label.
+    This image is embellished with red lines to show the 
+    the boundary of the text and 
+    the offset of the text from the top-right corner of the image.
+  </p>
+  <rcode eval="FALSE">
+grid.rect()
+grid.draw(label)
+  </rcode>
+  <rcode echo="FALSE" fig.width="2" fig.height="1" message="FALSE">
+grid.rect()
+grid.draw(label)
+gap <- unit(5, "mm")
+col <- 2
+guidecol <- adjustcolor(col, alpha=.5)
+border <- rectGrob(unit(1, "npc") - gap,
+                   unit(1, "npc") - gap,
+                   grobWidth(label),
+                   grobHeight(label),
+                   just=c("right", "top"),
+                   gp=gpar(col=guidecol, fill=NA))
+guide <- rectGrob(1, 1, 
+                  gap,
+                  gap,
+                  just=c("right", "top"),
+                  gp=gpar(col=guidecol, fill=NA))
+grid.draw(border)
+grid.draw(guide)
+  </rcode>
+  <p>
+    The aim of this report is to explore how we can access raw 'grid'
+    features like this in combination with data visualisations
+    drawn by the 'ggplot2' package (<a href="#ggplot2"/>).
+  </p>
+  <p>
+    We will spend some time in the remainder of this section
+    establishing why there is a problem to solve, then
+    the following section will describe
+    a solution: <a href="#gggrid"/>.
+  </p>
+
+  <rcode echo="FALSE">
+## Slightly mod the 'mtcars' data frame
+mtcars$manual <- mtcars$am == 1
+mtcars$name <- rownames(mtcars)    
+  </rcode>
+  <h3><a name="intro0">The straw man</a></h3>
+  <p>
+    Suppose we want to add a text label a precise distance
+    in from the top-right corner of a 'ggplot2' plot.  For example,
+    in the plot below, the text "Label" is exactly 5mm in from
+    the top-right corner of the plot region.
+  </p>
+  <rcode echo="FALSE" fig.width="5" fig.height="3" message="FALSE">
+library(gggrid)
+ggplot(mtcars) + 
+    geom_point(aes(disp, mpg)) +
+    grid_panel(label)
+  </rcode>
+  <p>
+    This is not an easy result to produce in 'ggplot2' with standard geoms.
+    If we use <code>geom_text()</code>, we must position the
+    text relative to the scales on the plot.  For example,
+    we could easily place the text at the y-location 30,
+    but calculating
+    "5mm from the top of the plot region" in terms of the y-axis 
+    scale is not at all straightforward.
+    Even the non-standard 
+    <code>annotate()</code> function has the same problem;
+    the position of the text still has to be 
+    in terms of the scales on the plot.
+  </p>
+  <p style="font-weight: bold">
+    It would be nice to be able to draw in 
+    'ggplot2' relative to coordinate systems other than
+    the data coordinate
+    system within the plot region.
+  </p>
+  <p style="color: grey">
+    Yes, this could be done with 
+    <code>annotation_custom()</code>, but we will conveniently ignore that fact
+    until later when we can explain the problems with that approach.
+  </p>
+  
+  <h3><a name="intro1">The jealous man</a></h3>
+  <p>
+    The 'lattice' package (<a href="#lattice"/>) 
+    is another package that, like 'ggplot2',
+    uses 'grid' to draw its high-level plots.  
+    Can we produce a simple label annotation in 'lattice'?
+  </p>
+  <p>
+    In 'lattice', we can customise a plot by defining a "panel function",
+    which is a function that gets called to draw the contents
+    of the plot region.  We are allowed to call any code within the
+    panel function, including 'grid' code, so the label annotation
+    is straightforward in 'lattice'.
+  </p>
+  <p>
+    In the code below, we draw a 'lattice' plot
+    with a panel function that draws the text label we defined earlier.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+library(lattice)
+xyplot(mpg ~ disp, mtcars,
+       panel=function(...) {
+           panel.xyplot(...)
+           grid.draw(label)
+       })
+  </rcode>
+  <p style="font-weight: bold">
+    It would be nice to have the equivalent of a 'lattice' "panel function"
+    in 'ggplot2'.
+  </p>
+  <p>
+    One nice thing about a panel function is that it provides access to the
+    useful work that 'lattice' does, including splitting the
+    data into groups and panels and setting up useful coordinate systems.
+    The panel function is run within the context of the plot region,
+    which is a 'grid' viewport with the appropriate scales,
+    and the panel function is provided with the data that is to be drawn
+    within the plot region.
+  </p>
+  <p>
+    For example, the following code adds a label at a fixed position
+    with a line to one of the data points in the 'lattice' plot.
+    This makes use of a combination of the data values that are passed to the
+    panel function, the coordinate system that is in place when
+    the panel function is run, and absolute 'grid' positioning.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+library(lattice)
+xyplot(mpg ~ disp, mtcars,
+       panel=function(x, y, ...) {
+           panel.xyplot(x, y, ...)
+           grid.text("most efficient",
+                     x=unit(1.5, "in"), 
+                     y=unit(1, "npc") - unit(2, "lines"),
+                     just="left")
+           grid.segments(unit(x[which.max(y)], "native"), 
+                         unit(max(y), "native"),
+                         unit(1.5, "in"), 
+                         unit(1, "npc") - unit(2, "lines"),
+                         gp=gpar(col="grey"))
+       })
+  </rcode>
+  <p style="font-weight: bold">
+    It would be nice if our 'ggplot2' panel function was able to take
+    advantage of the useful work that 'ggplot2' does, including
+    splitting up the data and setting up useful coordinate systems.
+  </p>
+
+  <h3><a name="intro2">The heretic</a></h3>
+  <p>
+    One of the reasons why 'ggplot2' is successful is because
+    it offers a clear paradigm or philosophy for how to construct
+    a data visualisation, based on Leland Wilkinson's 
+    Grammar of Graphics (<a href="#GoG"/>).  
+    Ideas like "geoms", "aesthetics", "stats",
+    and "coords" are central to this paradigm, but
+    'grid' concepts like "units" and "viewports" are not.
+    The 'grid' concepts may also be hidden away in 'ggplot2' because they
+    are perceived as too awkward or complex.
+  </p>
+  <p>
+    However, if we are already familiar with 'grid', rigid
+    adherence to the 'ggplot2' paradigm 
+    can sometimes mean that some things are harder
+    or more awkward than necessary.
+  </p>
+  <p style="font-weight: bold">
+    It would be nice to have full access from 'ggplot2'
+    to raw 'grid', red in tooth and claw.
+  </p>
+
+  <h3><a name="intro3">The hacker</a></h3>
+  <p>
+    For those intimately familiar with 'grid', there is a post-hoc way 
+    to work with a 'ggplot2' plot.
+    The following code demonstrates the approach:
+    having drawn a 'ggplot2' plot, we call the 'grid' function
+    <code>grid.force()</code> to get access to all of the 'grid'
+    grobs and viewports that 'ggplot2' created, then we can navigate to the
+    'grid' viewport that 'ggplot2' created for the plot region
+    using <code>downViewport()</code>, and then we can draw the
+    text label that we defined earlier
+    within that context.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE" fig.keep="last">
+ggplot(mtcars) + 
+    geom_point(aes(disp, mpg))
+grid.force()
+downViewport("panel.7-5-7-5")
+grid.draw(label)
+  </rcode>
+  <p>
+    It could reasonably be argued that this approach requires 
+    deeper knowledge of 'grid' and also of 'ggplot2' than most people have or
+    even would like to have.  The <code>grid.force()</code>
+    function and the viewport name <code>"panel.7-5-7-5"</code> are
+    not very self-explanatory.
+  </p>
+  <p>
+    Furthermore, the viewport that 'ggplot2' has created 
+    does not have scales relevant to the data, so we cannot
+    add data-based drawing.  The scales on the viewport that
+    'ggplot2' created are just 0 to 1, not the scales that the 
+    axes show. 
+  </p>
+  <rcode eval="FALSE">
+current.viewport()$yscale
+  </rcode>
+  <rcode echo="FALSE" message="FALSE" fig.keep="none">
+ggplot(mtcars) + 
+    geom_point(aes(disp, mpg))
+grid.force()
+downViewport("panel.7-5-7-5")
+grid.draw(label)
+current.viewport()$yscale
+  </rcode>
+  <p>
+    This means that, with this post-hoc approach, although we have full
+    access to 'grid', we cannot, for example, draw shapes relative
+    to the plot scales, like we did in the second 'lattice' panel
+    function example above.
+  </p>
+  
+  <p style="font-weight: bold">
+    It would be nice to have access to 'grid' 
+    and access to the 'ggplot2' context at the same time.
+  </p>
+
+  <h3><a name="intro4">The glutton</a></h3>
+  <p>
+    The 'ggplot2' package does actually allow us to specify raw 'grid'
+    grobs in some specific cases. 
+    For example, the <code>annotation_custom()</code> function
+    allows any 'grid' grob to be added to the plot.
+    However, this access to 'grid' is limited.
+    For example, the single grob that is passed to
+    <code>annotation_custom()</code>
+    is drawn in every
+    panel of a facetted plot, it is positioned within a region
+    that is defined in terms of the plot scales, 
+    and it has no access to the 
+    aesthetic mappings for the plot.
+  </p>
+  <p>
+    The following code shows how our simple label could be 
+    added using <code>annotation_custom()</code>.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+ggplot(mtcars) + 
+    geom_point(aes(disp, mpg)) +
+    annotation_custom(label)
+  </rcode>
+  <p>
+    That is simple enough, but what if we use facetting?
+    All we can get is the same grob (in the same place) in every panel.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+ggplot(mtcars) + 
+    geom_point(aes(disp, mpg)) +
+    facet_wrap("manual") +
+    annotation_custom(label)
+  </rcode>
+  <p>
+    Furthermore, as with the post-hoc approach, we do not have access to the
+    'ggplot2' coordinate system, so we cannot draw a grob 
+    relative to the axis scales.
+  </p>
+
+  <p style="font-weight: bold">
+    Did I mention that it would be nice to have access to 'grid' 
+    and access to the 'ggplot2' context at the same time?
+    I want it all!
+  </p>
+
+  <p style="color: grey">
+    There are two functions that I know of that provide a variation
+    on <code>ggplot2::annotation_custom()</code>:
+    <code>egg::geom_custom()</code> and <code>ggpmisc::geom_grob()</code>.
+    The reasons why these are still not what I want are left
+    to the <a href="#discussion"/>.
+  </p>
+
+  <h2><a name="gggrid">The 'gggrid' package</a></h2>
+  <p>
+    The idea behind the 'gggrid' package is to allow 
+    the user to compose a data visualisation from a combination
+    of 'ggplot2' output and 'grid' output.
+    The user should be able to make use of the advantages of 'ggplot2'
+    where that makes sense, e.g., 
+    to describe the essential structure of a complex image at a high level,
+    and at the same time make use of the advantages of 'grid'
+    where that makes sense, e.g., 
+    to specify precise locations relative to a range of coordinate systems.
+  </p>
+  <p>
+    There are two functions in the 'gggrid' package: 
+    <code>grid_panel()</code> and <code>grid_group()</code>.
+    Both functions add a new layer to a 'ggplot2' plot,
+    but they deliberately do not follow the typcial naming scheme
+    of <code>geom_*</code> or <code>stat_*</code> because
+    these functions are not trying to strictly adhere to the
+    'ggplot2' paradigm;  they add raw 'grid' drawing to
+    a 'ggplot2' plot.
+  </p>
+  <p>
+    In the simplest case, we call <code>grid_panel()</code> 
+    with a 'grid' grob as the only argument.  For example,
+    the following code produces our precisely positioned label
+    from the very beginning of the report.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    grid_panel(label)
+  </rcode>
+  <p>
+    The 'grid' grob can be more complex than a simple shape.
+    For example, the following code adds a gTree that draws
+    several shapes, all within a new 'grid' viewport that
+    is pushed within the current 'ggplot2' plot region.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+bg <- rectGrob(gp=gpar(fill="black"))
+lab <- textGrob("mtcars", gp=gpar(col="white"))
+vp <- viewport(x=1, y=1, width=.5, height=unit(1, "lines"),
+               just=c("right", "top"))
+banner <- gTree(children=gList(bg, lab), vp=vp)
+ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    grid_panel(banner)
+  </rcode>
+  <p>
+    It is important to note that we already have some access to the 
+    'ggplot2' context, even when we only provide a fixed grob to
+    <code>grid_panel</code>;  the grob is drawn within the 'grid'
+    viewport that represents the 'ggplot2' plot region.
+    For example, the following code simply adds an empty 'grid' rectangle
+    (with a thick border).  This is by default the same size as the
+    viewport it is drawn within, so we see a rectangle around the 'ggplot2'
+    plot region.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+rect <- rectGrob(gp=gpar(fill=NA, lwd=10))
+ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    grid_panel(rect)    
+  </rcode>
+  <p>
+    As we saw earlier, the scales on the
+    'grid' viewport that 'ggplot2' creates for
+    the plot region do not reflect the axis scales,
+    so we do not have full access to the 'ggplot2' context for 
+    the plot region.  
+    However, if we provide a function as the first argument to 
+    <code>grid_panel()</code>, that function is passed
+    the <code>data</code> and the <code>coords</code> (the transformed
+    data) for the plot, which provides us with enough information
+    to start writing "panel functions" in the sense of the 'lattice'
+    package.
+  </p>
+  <p>
+    As a simple example, the following code calls <code>grid_panel()</code>
+    with a function that generates a 'grid' grob based on the largest
+    and smallest data values.  The <code>coords</code> are values
+    that have already been transformed to the plot scales, so we can 
+    just draw a
+    'grid' rectangle around the minimum and maximum of those values.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+rectFun <- function(data, coords) {
+    left <- min(coords$x)
+    bottom <- min(coords$y)
+    width <- diff(range(coords$x))
+    height <- diff(range(coords$y))
+    rectGrob(left, bottom, width, height, 
+             just=c("left", "bottom"),
+             gp=gpar(fill=NA, lwd=1))
+}
+ggplot(mtcars, aes(x=disp, y=mpg)) +
+    geom_point() +
+    grid_panel(rectFun)    
+  </rcode>  
+  <p>
+    It is important to note that the columns names for the 
+    <code>data</code> and <code>coords</code>
+    that are passed to the <code>rectFun()</code> come from the
+    aesthetic mappings in the 'ggplot2' plot.  
+    For example, in this case, we have mapped
+    the <code>disp</code> column of the <code>mtcars</code> data set
+    to the <code>x</code> aesthetic, so both <code>data</code> and
+    <code>coords</code> have a column named <code>x</code>.
+    Both <code>grid_panel()</code> and <code>grid_group()</code>
+    provide a <code>debug</code> argument that can be a function
+    and this can be used to inspect the values that are being
+    passed to the <code>grob</code> function.
+  </p>
+  <rcode fig.keep="none">
+debugHead <- function(data, coords) {
+    print(head(data))
+    print(head(coords))
+}
+ggplot(mtcars, aes(x=disp, y=mpg)) +
+    geom_point() +
+    grid_panel(debug=debugHead)
+  </rcode>
+  <p>
+    The following code provides a slightly more complex example
+    that demonstrates the combination of 'ggplot2' context (the 
+    data values) and raw 'grid'.  In this case, we are drawing a
+    "rug" of short lines at the right edge of the plot.
+    On one hand, the y-location of the lines are based on the
+    'ggplot2' data, but on the other hand, the length
+    of the lines (2mm) is specified using 'grid' units.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+rug <- function(data, coords) {
+    segmentsGrob(unit(1, "npc"),
+                 coords$y,
+                 unit(1, "npc") - unit(2, "mm"),
+                 coords$y,
+                 gp=gpar(lwd=2, col=rgb(0,0,0,.5)))
+}
+ggplot(mtcars, aes(x=disp, y=mpg)) +
+    geom_point() +
+    grid_panel(rug)
+  </rcode>
+  <p>
+    Another advantage of specifying a <code>grob</code> function
+    is that it is evaluated for each panel.
+    The following code demonstrates this by adding facetting 
+    (but just reusing the <code>rug</code> function);
+    we get a (different) rug added to each panel.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+ggplot(mtcars, aes(x=disp, y=mpg)) +
+    geom_point() +
+    facet_wrap("manual") +
+    grid_panel(rug)
+  </rcode>  
+  <p>
+    This rule also holds for the <code>grid_group()</code> function.
+    If there are distinct groups being drawn in the plot,
+    <code>grid_group()</code> will call the <code>grob</code> 
+    function for each group.
+    For example, the following code produces a 'ggplot2' plot
+    with two groups of points differentiated by <code>colour</code>.
+    We call <code>grid_group()</code> with a new "rug" grob
+    function that colours the short lines for each group based on the
+    colour used for the data.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+rugGroup <- function(data, coords) {
+    segmentsGrob(unit(1, "npc"),
+                 coords$y,
+                 unit(1, "npc") - unit(2, "mm"),
+                 coords$y,
+                 gp=gpar(lwd=2, col=adjustcolor(data$colour, alpha=.5)))
+}
+ggplot(mtcars, aes(x=disp, y=mpg, color=manual)) +
+    geom_point() +
+    grid_group(rugGroup)
+  </rcode>  
+  <p>
+    In addition to data values and transformed data values,
+    the <code>grid_panel()</code> and <code>grid_group()</code>
+    functions have access to any variables that are calculated by
+    'ggplot2' "stats".  For example, the following code
+    shows the variables that are available if we use 
+    <code>stat_smooth</code>.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE" fig.keep="none">
+ggplot(mtcars, aes(x=disp, y=mpg, color=manual)) +
+    geom_point() +
+    grid_panel(stat="smooth", debug=debugHead)
+  </rcode>  
+  <p>
+    This allows us to add 'grid' drawing based on "stat" output,
+    as shown below.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+addLabel <- function(data, coords) {
+    label <- expression(y == alpha + beta*x + epsilon)
+    xpos <- which(coords$x > .5)[1]
+    dx <- convertWidth(unit(diff(coords$x[1:2]), "npc"), "in", valueOnly=TRUE)
+    dy <- convertHeight(unit(diff(coords$y[1:2]), "npc"), "in", valueOnly=TRUE)
+    angle <- 180*atan2(dy, dx)/pi
+    textGrob(label,
+             x=unit(coords$x[xpos], "npc"), 
+             y=unit(coords$y[xpos], "npc") + unit(.5, "mm"),
+             just="bottom",
+             rot=angle,
+             gp=gpar(col=2))
+}
+ggplot(mtcars, aes(x=disp, y=mpg)) +
+    geom_point() +
+    geom_smooth(method="lm", colour=2) +
+    grid_panel(addLabel, stat="smooth", method="lm")
+  </rcode>    
+
+  <p>
+    We can also use aesthetic mappings to pass additional information
+    to <code>grid_panel</code>.  For example, in the following code
+    we make sure that the vehicle names are included in the 
+    <code>data</code> that are passed to the grob-generating function,
+    <code>nameVehicle()</code>,
+    by specifying <code>aes(label=name)</code>.
+    The <code>nameVehicle()</code> function uses this information,
+    along with the default <code>data</code> and <code>coords</code>
+    values, to label the most efficient vehicle.
+    We use facetting to emphasise that the calculations occur
+    for each panel.
+  </p>
+  <p>
+    This example also highlights the
+    fact that 'gggrid' is not playing by all of the 'ggplot2' rules
+    because it generates a warning about unknown aesthetics.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE">
+nameVehicle <- function(data, coords) {
+    text <- textGrob(data$label[which.max(coords$y)],
+                     x=unit(1, "npc") - unit(5, "mm"), 
+                     y=unit(1, "npc") - unit(2, "lines"),
+                     just="right")
+    line <- segmentsGrob(coords$x[which.max(coords$y)],
+                         max(coords$y),
+                         unit(1, "npc") - unit(5, "mm") - 
+                             grobWidth(text), 
+                         unit(1, "npc") - unit(2, "lines"),
+                         gp=gpar(col="grey"))
+    gTree(children=gList(line, text))
+}
+ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    facet_wrap("manual") +
+    grid_panel(nameVehicle, aes(label=name))
+  </rcode>
+
+  <p>
+    The final example demonstrates a combination of 'gggrid' and
+    post-hoc editing of 'ggplot2' plots.
+  </p>
+  <rcode fig.width="5" fig.height="3" message="FALSE" fig.keep="last" results="hide">
+marker <- function(data, coords) {
+    nullGrob(coords$x[which.max(coords$y)],
+             max(coords$y),
+             name="mark")
+}
+g <- ggplot(mtcars, aes(disp, mpg)) +
+    geom_point() +
+    facet_wrap("manual") +
+    grid_panel(marker) +
+    coord_cartesian(clip="off")
+grid.newpage()
+pushViewport(viewport(y=0, 
+                      height=unit(1, "npc") - unit(2, "lines"), 
+                      just="bottom", 
+                      name="ggplot"))
+plot(g, newpage=FALSE)
+upViewport()
+grid.force()
+markers <- grid.grep("mark", global=TRUE, viewports=TRUE)
+text <- textGrob("most efficient ",
+                 x=unit(1, "lines"),
+                 y=unit(1, "npc") - unit(1, "lines"),
+                 just=c("left", "top"))
+grid.draw(text)
+drawLine <- function(x) {
+    depth <- downViewport(attr(x, "vpPath"))
+    m <- grid.get(x)
+    loc <- deviceLoc(m$x, m$y)
+    upViewport(depth)
+    grid.curve(grobX(text, 0), grobY(text, 0),
+               loc$x, loc$y, 
+               square=FALSE, curvature=-.5, angle=45, ncp=4,
+               arrow=arrow(length=unit(3, "mm"), angle=20, type="closed"),
+               gp=gpar(col="grey", fill="grey"))
+}
+lapply(markers, drawLine)
+  </rcode>  
+  
+
+  <h2><a name="discussion">Discussion</a></h2>
+  <p>
+    There is not a lot of code in the 'gggrid' package.
+    The biggest contribution is possibly just a change in mindset,
+    to embrace the use of raw 'grid' in combination with 'ggplot2',
+    rather than trying to avoid raw 'grid' as much as possible.
+  </p>
+
+  <h3>Custom Geoms</h3>
+  <p>
+    Anyone who has developed a custom 'ggplot2' Geom may have recognised
+    that all of the examples could have been achieved by 
+    creating a special Geom every time
+    instead of using <code>grid_panel()</code> or
+    <code>grid_group()</code>.
+    Nevertheless, 'gggrid' still saves on quite a bit of typing.
+    In effect, 'gggrid' allows us to develop a new 'ggplot2' Geom 
+    on-the-fly (while flouting some of the normal rules, like
+    having to formally declare the aesthetics that our Geom supports).
+    From this perspective, 'gggrid' may be a good intermediary
+    between naive 'ggplot2' user and hard-core 'ggplot2' Geom
+    developer.
+  </p>
+
+  <h3>Related work</h3>
+  <p>
+    There are two packages with functions that allow raw 'grid' grobs
+    to be added to 'ggplot2' plots:
+    The <code>geom_custom()</code> function from the 'egg' package 
+    (<a href="#pkg:egg"/>)
+    and <code>geom_grob()</code> from the 'ggpmisc' package 
+    (<a href="#pkg:ggpmisc"/>).
+  </p>
+  <p>
+    The <code>geom_custom()</code> function allows the user to
+    provide a <code>grob_fun</code> argument, which is 
+    a function that generates a grob,
+    similar to <code>grid_panel()</code>.
+    However, that function is then called once for each row of the
+    data set being plotted 
+    (and the <code>x</code> and <code>y</code> components
+    of the resulting grob are then set based on the data set).
+    Furthermore, <code>geom_custom</code> requires a <code>data</code>
+    aesthetic (i.e., a <code>data</code> column within the data set),
+    that provides the data values that are sent to the <code>grob_fun</code>.
+    This is designed specifically for adding a grob for each row
+    of the data set, but it is both awkward 
+    for simpler tasks, such as adding a single
+    label, and restrictive for more complex tasks,
+    such as adding a single label using calculations based on the 
+    entire data set.
+  </p>
+  <p>
+    The <code>geom_grob</code> function requires the user to
+    provide a column of 'grid' grobs in the data set.
+    Each of these grobs is then drawn within a viewport that is
+    based on the <code>x</code> and <code>y</code> aesthetics.
+    Again, the design is aimed at drawing a grob for each row of
+    the data set and again it makes simpler tasks awkward and 
+    more complex tasks very difficult.
+  </p>
+  <p>
+    In both cases, the functions that allow 'grid' grobs to be added to
+    a 'ggplot2' plot appear to be somewhat hamstrung by a desire
+    to conform as much as possible to the 'ggplot2' philosophy.
+    The 'gggrid' package deliberately breaks the 'ggplot2' rules
+    in order to provide unfettered access to 'grid'.
+  </p>
+
+  <h2><a name="summary">Summary</a></h2>
+  <p>
+    The philosophy of the 'ggplot2' package has no concept
+    of some important 'grid' ideas: units and viewports.
+    This means that some things are harder to do than they
+    need to be.
+    'gggrid' basically says, screw the philosophy, let's draw
+    some things the easy way.
+  </p>
+  <p>
+    The goal of 'gggrid' is to make it easy to perform simple
+    'grid' drawing and to make it possible to perform more complex 
+    'grid' drawing, with full access to both 'grid' and 
+    the 'ggplot2' context. 
+    The former is made easy by providing a single grob as the first argument
+    to <code>grid_panel()</code>, in which case the data are entirely ignored.
+    The latter is made possible by providing a function as the
+    first argument to <code>grid_panel</code>, in which case the
+    data are available to base drawing on.
+  </p>
+
+  <h2><a name="requirements">Technical requirements</a></h2>
+  <p>
+    The examples and discussion in this document relate to <a
+    href="https://github.com/pmur002/gggrid/releases/tag/v0.1-0">version
+    0.1-0</a> of the 'gggrid' package.
+  </p>
+  <p>
+    This report was generated within a Docker container
+    (see the <a href="#Resources"/> section below).
+  </p>
+
+  <h2><a name="Resources">Resources</a></h2>
+  <ul>
+    <li>
+      The <a href="gggrid.cml">raw source file</a> for this
+      report, a <a href="gggrid.xml">valid XML</a>
+      transformation of the source file, a <a
+      href="gggrid.Rhtml">'knitr' document</a> generated from
+      the XML file, 
+      two <a href="toc.R">R</a> <a href="bib.R">files</a> and
+      the <a href="gggrid.bib">bibtex file</a>
+      that are used to generate the table of contents and reference sections,
+      two <a href="common.xsl">XSL</a> <a
+      href="knitr.xsl">files</a> and an 
+      <a href="knit.R">R file</a> that are used to transform the XML to
+      the 'knitr' document, and a <a href="Makefile">Makefile</a> that
+      contains code for the other transformations and coordinates
+      everything.  
+      These materials are also available
+      on <a href="https://github.com/pmur002/gggrid-report/releases/tag/v1">github</a>.
+    </li>
+    <li>
+      The LaTeX document used in one example is:
+      <a href="luaTikz.tex"><code>luaTikz.tex</code></a>.
+    </li>
+    <li>
+      This report was generated within a 
+      <a href="https://www.docker.com/">Docker</a> container.
+      The Docker command to build the report is included in the Makefile above.
+      The Docker image for the container is available from
+      <a href="https://hub.docker.com/r/pmur002/gggrid/">Docker Hub</a>;
+      alternatively, the image can be rebuilt from its 
+      <a href="Dockerfile">Dockerfile</a>.
+    </li>
+  </ul>
+
+  <h2>How to cite this document</h2>
+  <p>
+    Murrell, P. (2020). 
+    "'gggrid' it's g-g-great!" 
+    Technical Report 2021-??, Department of Statistics, 
+    The University of Auckland. version 1. 
+    [ <a href="how-to-cite.bib">bib</a> |
+      <a href="http://doi.org/">DOI</a> | 
+      <a href="http://stattech.blogs.auckland.ac.nz/">http</a> ]
+  </p>
+
+  <h2><a name="references">References</a></h2>
+  <ul style="list-style-type: none">
+    <li>
+      <a name="R"/>
+    </li>
+    <li>
+      <a name="ggplot2"/>
+    </li>
+    <li>
+      <a name="lattice"/>
+    </li>
+    <li>
+      <a name="GoG"/>
+    </li>
+    <li>
+      <a name="pkg:egg"/>
+    </li>
+    <li>
+      <a name="pkg:ggpmisc"/>
+    </li>
+  </ul>
+
+  <hr/>
+  <p>
+    <a rel="license"
+    href="http://creativecommons.org/licenses/by/4.0/"><img class="CC"
+    alt="Creative Commons License" style="border-width:0"
+    src="https://i.creativecommons.org/l/by/4.0/88x31.png"/></a><br/><span
+    xmlns:dct="http://purl.org/dc/terms/"
+    property="dct:title">This document</span>
+    by <span xmlns:cc="http://creativecommons.org/ns#"
+    property="cc:attributionName">Paul
+    Murrell</span> is licensed under a <a rel="license"
+    href="http://creativecommons.org/licenses/by/4.0/">Creative
+    Commons Attribution 4.0 International License</a>.
+  </p>
+
+
+</body>
+</html>
