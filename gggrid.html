@@ -215,7 +215,7 @@ Tuesday 25 May 2021
   </p>
 
     <h3>
-      <a name="intro0">The straw man</a>
+      <a name="intro0">The straw man:</a>
     </h3>
     <p>
     Suppose we want to add a text label a precise distance
@@ -249,7 +249,7 @@ Tuesday 25 May 2021
     until later when we can explain the problems with that approach.
   </p>
     <h3>
-      <a name="intro1">The jealous man</a>
+      <a name="intro1">The jealous man:</a>
     </h3>
     <p>
     The 'lattice' package (<a href="#lattice">Sarkar, 2008</a>) 
@@ -318,7 +318,7 @@ Tuesday 25 May 2021
     splitting up the data and setting up useful coordinate systems.
   </p>
     <h3>
-      <a name="intro2">The heretic</a>
+      <a name="intro2">The heretic:</a>
     </h3>
     <p>
     One of the reasons why 'ggplot2' is successful is because
@@ -342,7 +342,7 @@ Tuesday 25 May 2021
     to raw 'grid', red in tooth and claw.
   </p>
     <h3>
-      <a name="intro3">The hacker</a>
+      <a name="intro3">The hacker:</a>
     </h3>
     <p>
     For those intimately familiar with 'grid', there is a post-hoc way 
@@ -394,7 +394,7 @@ Tuesday 25 May 2021
     and access to the 'ggplot2' context at the same time.
   </p>
     <h3>
-      <a name="intro4">The glutton</a>
+      <a name="intro4">The glutton:</a>
     </h3>
     <p>
     The 'ggplot2' package does actually allow us to specify raw 'grid'
@@ -446,6 +446,30 @@ Tuesday 25 May 2021
     The reasons why these are still not what I want are left
     to the <a href="#discussion">Discussion</a>.
   </p>
+    <h3>The missing link:</h3>
+    <p>
+    Although 'ggplot2' uses basic 'grid' shapes to draw its Geoms,
+    there are some 'grid' shapes, or 'grid'-based packages, that
+    are not accessible from 'ggplot2'.  
+    For example, the 'vwline' package (<a href="#pkg:vwline"></a>)
+    draws variable-width lines
+    and the 'gridGeometry' package (<a href="#pkg:gridGeometry"></a>)
+    provides constructive geometry operations on 'grid' grobs.
+  </p>
+    <p>
+    Users are currently dependent on a developer creating a
+    Geom interface in order to use the full range of 'grid'-based shapes 
+    in a 'ggplot2' plot.
+  </p>
+    <p style="font-weight: bold">
+    It would be nice to have instant access to ALL 'grid' shapes within
+    a 'ggplot2' plot.
+  </p>
+    <p style="color: grey">
+    I did find some mentions online of a github package 'ggvwline' 
+    by Houyun Huang, but the
+    links were all stale.
+  </p>
     <h2>
       <a name="gggrid">2. The 'gggrid' package</a>
     </h2>
@@ -484,7 +508,8 @@ Tuesday 25 May 2021
     <p>
     The 'grid' grob can be more complex than a simple shape.
     For example, the following code adds a gTree that draws
-    several shapes, all within a new 'grid' viewport that
+    a combination of a rectangle and a text label,
+    both within a new 'grid' viewport that
     is pushed within the current 'ggplot2' plot region.
   </p>
 <div class="chunk" id="unnamed-chunk-17"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">bg</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">rectGrob</span><span class="hl std">(</span><span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fill</span><span class="hl std">=</span><span class="hl str">&quot;black&quot;</span><span class="hl std">))</span>
@@ -517,7 +542,9 @@ Tuesday 25 May 2021
     As we saw earlier, the scales on the
     'grid' viewport that 'ggplot2' creates for
     the plot region do not reflect the axis scales,
-    so we do not have full access to the 'ggplot2' context for 
+    so when we just call <code>grid_panel()</code> with a grob
+    as the first argument, 
+    we do not have full access to the 'ggplot2' context for 
     the plot region.  
     However, if we provide a function as the first argument to 
     <code>grid_panel()</code>, that function is passed
@@ -551,7 +578,8 @@ Tuesday 25 May 2021
     <p>
     It is important to note that the columns names for the 
     <code>data</code> and <code>coords</code>
-    that are passed to the <code>rectFun()</code> come from the
+    that are passed to <code>rectFun()</code> in the above example
+    come from the
     aesthetic mappings in the 'ggplot2' plot.  
     For example, in this case, we have mapped
     the <code>disp</code> column of the <code>mtcars</code> data set
@@ -594,6 +622,12 @@ Tuesday 25 May 2021
     On one hand, the y-location of the lines are based on the
     'ggplot2' data, but on the other hand, the length
     of the lines (2mm) is specified using 'grid' units.
+  </p>
+    <p style="color: grey">
+    Yes, there is a <code>geom_rug()</code>, but this is a nice
+    practical and easy-to-understand example to start with.
+    Later examples will go to some places that 'ggplot2' cannot 
+    currently go.
   </p>
 <div class="chunk" id="unnamed-chunk-21"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">rug</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">data</span><span class="hl std">,</span> <span class="hl kwc">coords</span><span class="hl std">) {</span>
     <span class="hl kwd">segmentsGrob</span><span class="hl std">(</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span>
@@ -673,7 +707,10 @@ Tuesday 25 May 2021
 </div></div>
     <p>
     This allows us to add 'grid' drawing based on "stat" output,
-    as shown below.
+    as shown below.  In  this case, we add a label
+    parallel to the smooth line and we calculate the angle of the 
+    text using the <code>x</code> and <code>y</code> values 
+    that come from the "stat" smooth.
   </p>
 <div class="chunk" id="unnamed-chunk-25"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">addLabel</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">data</span><span class="hl std">,</span> <span class="hl kwc">coords</span><span class="hl std">) {</span>
     <span class="hl std">label</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">expression</span><span class="hl std">(y</span> <span class="hl opt">==</span> <span class="hl std">alpha</span> <span class="hl opt">+</span> <span class="hl std">beta</span><span class="hl opt">*</span><span class="hl std">x</span> <span class="hl opt">+</span> <span class="hl std">epsilon)</span>
@@ -734,10 +771,73 @@ Tuesday 25 May 2021
 </pre></div>
 </div><div class="rimage default"><img src="figure/unnamed-chunk-26-1.png" title="plot of chunk unnamed-chunk-26" alt="plot of chunk unnamed-chunk-26" class="plot" /></div></div>
     <p>
-    The final example demonstrates a combination of 'gggrid' and
-    post-hoc editing of 'ggplot2' plots.
+    The next example demonstrates the idea of accessing 'grid'-based 
+    drawing that does not (yet) have a 'ggplot2' Geom interface.
+    The following code makes use of the 'vwline' package to draw
+    a variation on Minard's famous map.  The <code>grid_group()</code>
+    function is useful here because there is no existing 'ggplot2' Geom 
+    interface, so we need direct access to the raw 'grid'-based function
+    <code>vwlineGrob()</code>.
   </p>
-<div class="chunk" id="unnamed-chunk-27"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">marker</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">data</span><span class="hl std">,</span> <span class="hl kwc">coords</span><span class="hl std">) {</span>
+    <p>
+    This example is also interesting because there are no 
+    <code>geom_*()</code> calls;  <code>grid_panel()</code>
+    is the only layer in the plot.
+    Furthermore, we make good use of the 'ggplot2' infrastructure
+    to set up the coordinate system for the plot using
+    <code>coord_fixed()</code> and the mapping from the number
+    of survivors to the line width using <code>scale_size()</code>.
+    This makes our grob-generating function, <code>path()</code>,
+    quite straightforward.
+  </p>
+    <p style="color: grey">
+    The data for this example comes from the supplementary materials
+    published with <a href="#wickham-GoG">Wickham, 2010</a>.
+  </p>
+<div class="chunk" id="unnamed-chunk-27"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">minard</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">read.table</span><span class="hl std">(</span><span class="hl str">&quot;Minard/minard-troops.txt&quot;</span><span class="hl std">,</span> <span class="hl kwc">header</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl kwd">library</span><span class="hl std">(vwline)</span>
+<span class="hl std">path</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">data</span><span class="hl std">,</span> <span class="hl kwc">coords</span><span class="hl std">) {</span>
+    <span class="hl kwd">vwlineGrob</span><span class="hl std">(coords</span><span class="hl opt">$</span><span class="hl std">x, coords</span><span class="hl opt">$</span><span class="hl std">y,</span> <span class="hl kwc">w</span><span class="hl std">=</span><span class="hl kwd">unit</span><span class="hl std">(coords</span><span class="hl opt">$</span><span class="hl std">size,</span> <span class="hl str">&quot;in&quot;</span><span class="hl std">),</span>
+               <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">col</span><span class="hl std">=coords</span><span class="hl opt">$</span><span class="hl std">colour[</span><span class="hl num">1</span><span class="hl std">],</span>
+                       <span class="hl kwc">fill</span><span class="hl std">=</span><span class="hl kwd">adjustcolor</span><span class="hl std">(coords</span><span class="hl opt">$</span><span class="hl std">colour[</span><span class="hl num">1</span><span class="hl std">],</span> <span class="hl kwc">alpha</span><span class="hl std">=</span><span class="hl num">.5</span><span class="hl std">)))</span>
+<span class="hl std">}</span>
+<span class="hl kwd">ggplot</span><span class="hl std">(minard,</span>
+       <span class="hl kwd">aes</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=long,</span> <span class="hl kwc">y</span><span class="hl std">=lat,</span> <span class="hl kwc">size</span><span class="hl std">=survivors,</span> <span class="hl kwc">colour</span><span class="hl std">=direction,</span>
+           <span class="hl kwc">group</span><span class="hl std">=</span><span class="hl kwd">interaction</span><span class="hl std">(group, direction)))</span> <span class="hl opt">+</span>
+    <span class="hl kwd">scale_size</span><span class="hl std">(</span><span class="hl kwc">range</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">.01</span><span class="hl std">,</span> <span class="hl num">.5</span><span class="hl std">))</span> <span class="hl opt">+</span>
+    <span class="hl kwd">coord_fixed</span><span class="hl std">(</span><span class="hl num">2</span><span class="hl std">,</span> <span class="hl kwc">clip</span><span class="hl std">=</span><span class="hl str">&quot;off&quot;</span><span class="hl std">)</span> <span class="hl opt">+</span>
+    <span class="hl kwd">grid_group</span><span class="hl std">(path)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/unnamed-chunk-27-1.png" title="plot of chunk unnamed-chunk-27" alt="plot of chunk unnamed-chunk-27" class="plot" /></div></div>
+    <p>
+    The final example demonstrates a combination of 'gggrid' and
+    post-hoc editing of 'ggplot2' plots.  This example makes use
+    of a lot of raw 'grid' tools and techniques, so requires 
+    a little more explanation.
+  </p>
+    <p>
+    First, as part of the main 'ggplot2' plot, 
+    we call <code>grid_panel()</code> just to add
+    a "null" grob at the location of the data symbol representing
+    the highest <code>mpg</code> (in each panel),
+    but we do not immediately draw the 'ggplot2' plot.
+    Instead, we push a 'grid' viewport that leaves a gap at the 
+    top of the page and draw the 'ggplot2' plot in the remainder of the
+    page.   We define a text grob and draw that in the gap at the top
+    of the page.
+    We then call <code>grid.force()</code> to make the 'grid'
+    grobs and viewports from the 'ggplot2' plot accessible and
+    we determine the "path"s to the "null" grob markers that
+    we drew on the 'ggplot2' plot (and to the viewports that
+    those markers were drawn within).
+    For each marker, we navigate down to the viewport that the
+    marker was drawn within, calculate the location of the marker
+    in terms of the entire page, navigate back up to the "root"
+    viewport (the whole page), and draw a curved line (with an arrow)
+    from the right edge
+    of the text label to the marker.
+  </p>
+<div class="chunk" id="unnamed-chunk-28"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">marker</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">data</span><span class="hl std">,</span> <span class="hl kwc">coords</span><span class="hl std">) {</span>
     <span class="hl kwd">nullGrob</span><span class="hl std">(coords</span><span class="hl opt">$</span><span class="hl std">x[</span><span class="hl kwd">which.max</span><span class="hl std">(coords</span><span class="hl opt">$</span><span class="hl std">y)],</span>
              <span class="hl kwd">max</span><span class="hl std">(coords</span><span class="hl opt">$</span><span class="hl std">y),</span>
              <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;mark&quot;</span><span class="hl std">)</span>
@@ -754,13 +854,13 @@ Tuesday 25 May 2021
                       <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;ggplot&quot;</span><span class="hl std">))</span>
 <span class="hl kwd">plot</span><span class="hl std">(g,</span> <span class="hl kwc">newpage</span><span class="hl std">=</span><span class="hl num">FALSE</span><span class="hl std">)</span>
 <span class="hl kwd">upViewport</span><span class="hl std">()</span>
-<span class="hl kwd">grid.force</span><span class="hl std">()</span>
-<span class="hl std">markers</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">grid.grep</span><span class="hl std">(</span><span class="hl str">&quot;mark&quot;</span><span class="hl std">,</span> <span class="hl kwc">global</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">viewports</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
 <span class="hl std">text</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">textGrob</span><span class="hl std">(</span><span class="hl str">&quot;most efficient &quot;</span><span class="hl std">,</span>
                  <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;lines&quot;</span><span class="hl std">),</span>
                  <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">)</span> <span class="hl opt">-</span> <span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;lines&quot;</span><span class="hl std">),</span>
                  <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">))</span>
 <span class="hl kwd">grid.draw</span><span class="hl std">(text)</span>
+<span class="hl kwd">grid.force</span><span class="hl std">()</span>
+<span class="hl std">markers</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">grid.grep</span><span class="hl std">(</span><span class="hl str">&quot;mark&quot;</span><span class="hl std">,</span> <span class="hl kwc">global</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">viewports</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
 <span class="hl std">drawLine</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">) {</span>
     <span class="hl std">depth</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl kwd">attr</span><span class="hl std">(x,</span> <span class="hl str">&quot;vpPath&quot;</span><span class="hl std">))</span>
     <span class="hl std">m</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">grid.get</span><span class="hl std">(x)</span>
@@ -774,15 +874,20 @@ Tuesday 25 May 2021
 <span class="hl std">}</span>
 <span class="hl kwd">lapply</span><span class="hl std">(markers, drawLine)</span>
 </pre></div>
-</div><div class="rimage default"><img src="figure/unnamed-chunk-27-1.png" title="plot of chunk unnamed-chunk-27" alt="plot of chunk unnamed-chunk-27" class="plot" /></div></div>
+</div><div class="rimage default"><img src="figure/unnamed-chunk-28-1.png" title="plot of chunk unnamed-chunk-28" alt="plot of chunk unnamed-chunk-28" class="plot" /></div></div>
     <h2>
       <a name="discussion">3. Discussion</a>
     </h2>
     <p>
     There is not a lot of code in the 'gggrid' package.
-    The biggest contribution is possibly just a change in mindset,
+    The main contribution of the package is possibly just a change in mindset,
     to embrace the use of raw 'grid' in combination with 'ggplot2',
     rather than trying to avoid raw 'grid' as much as possible.
+  </p>
+    <p>
+    What the 'gggrid' package provides is full access to ALL 'grid'
+    features, including units and viewports, gradient and pattern fills, 
+    variable-width lines and constructive geometry.
   </p>
     <h3>Custom Geoms</h3>
     <p>
@@ -791,11 +896,11 @@ Tuesday 25 May 2021
     creating a special Geom every time
     instead of using <code>grid_panel()</code> or
     <code>grid_group()</code>.
-    Nevertheless, 'gggrid' still saves on quite a bit of typing.
+    Nevertheless, 'gggrid' saves on quite a bit of typing.
     In effect, 'gggrid' allows us to develop a new 'ggplot2' Geom 
     on-the-fly (while flouting some of the normal rules, like
     having to formally declare the aesthetics that our Geom supports).
-    From this perspective, 'gggrid' may be a good intermediary
+    From this perspective, 'gggrid' may provide a useful intermediary
     between naive 'ggplot2' user and hard-core 'ggplot2' Geom
     developer.
   </p>
@@ -812,58 +917,66 @@ Tuesday 25 May 2021
     The <code>geom_custom()</code> function allows the user to
     provide a <code>grob_fun</code> argument, which is 
     a function that generates a grob,
-    similar to <code>grid_panel()</code>.
-    However, that function is then called once for each row of the
+    similar to providing a function to <code>grid_panel()</code>.
+    However, with <code>geom_custom()</code>,
+    that <code>grob_fun</code> function is called once for each row of the
     data set being plotted 
     (and the <code>x</code> and <code>y</code> components
     of the resulting grob are then set based on the data set).
-    Furthermore, <code>geom_custom</code> requires a <code>data</code>
+    Furthermore, <code>geom_custom()</code> requires a <code>data</code>
     aesthetic (i.e., a <code>data</code> column within the data set),
     that provides the data values that are sent to the <code>grob_fun</code>.
-    This is designed specifically for adding a grob for each row
-    of the data set, but it is both awkward 
+    This interface is designed specifically for adding a grob for each row
+    of the data set and it is both awkward 
     for simpler tasks, such as adding a single
     label, and restrictive for more complex tasks,
     such as adding a single label using calculations based on the 
     entire data set.
   </p>
     <p>
-    The <code>geom_grob</code> function requires the user to
+    The <code>geom_grob()</code> function from the 'ggpmisc' package
+    requires the user to
     provide a column of 'grid' grobs in the data set.
     Each of these grobs is then drawn within a viewport that is
-    based on the <code>x</code> and <code>y</code> aesthetics.
+    based on the <code>x</code> and <code>y</code> aesthetics in the data set.
     Again, the design is aimed at drawing a grob for each row of
     the data set and again it makes simpler tasks awkward and 
-    more complex tasks very difficult.
+    more complex tasks quite difficult.
   </p>
     <p>
     In both cases, the functions that allow 'grid' grobs to be added to
-    a 'ggplot2' plot appear to be somewhat hamstrung by a desire
-    to conform as much as possible to the 'ggplot2' philosophy.
-    The 'gggrid' package deliberately breaks the 'ggplot2' rules
+    a 'ggplot2' plot appear to be constrainted by their conformance
+    to the 'ggplot2' philosophy.
+    The 'gggrid' package deliberately ignores parts of the standard
+    'ggplot2' approach
     in order to provide unfettered access to 'grid'.
   </p>
     <h2>
       <a name="summary">4. Summary</a>
     </h2>
     <p>
-    The philosophy of the 'ggplot2' package has no concept
-    of some important 'grid' ideas: units and viewports.
+    The philosophy of the 'ggplot2' package has no room for 
+    of some important 'grid' concepts, like units and viewports.
     This means that some things are harder to do than they
     need to be.
-    'gggrid' basically says, screw the philosophy, let's draw
-    some things the easy way.
+    The 'gggrid' package offers the opportunity to break with the
+    orthodoxy in order to make some 
+    some things easier to draw.
   </p>
     <p>
-    The goal of 'gggrid' is to make it easy to perform simple
+    The goal of 'gggrid' is both to make it easy to perform simple
     'grid' drawing and to make it possible to perform more complex 
     'grid' drawing, with full access to both 'grid' and 
     the 'ggplot2' context. 
-    The former is made easy by providing a single grob as the first argument
-    to <code>grid_panel()</code>, in which case the data are entirely ignored.
-    The latter is made possible by providing a function as the
-    first argument to <code>grid_panel</code>, in which case the
-    data are available to base drawing on.
+    Simple tasks are made easy by providing a single grob as the first argument
+    to <code>grid_panel()</code>, in which case the 'ggplot2' 
+    data are entirely ignored, though drawing still occurs in the 'ggplot2'
+    plot region.
+    Complex tasks are made possible by providing a function as the
+    first argument to <code>grid_panel</code>, in which case the 'ggplot2'
+    data are available to base drawing on, as well as all 'ggplot2'
+    aesthetic mappings, calculated values from "stats", and
+    scale and coordinate transformations.
   </p>
     <h2>
       <a name="requirements">5. Technical requirements</a>
@@ -948,6 +1061,28 @@ Auguie, B. (2019).
 
 </dd>
       <dt>
+[<a name="pkg:gridGeometry">Murrell, 2019a</a>]
+</dt>
+      <dd>
+Murrell, P. (2019a).
+ <em>gridGeometry: Polygon Geometry in 'grid'</em>.
+ R package version 0.2-0.
+[ <a href="gggrid-bib_bib.html#pkg:gridGeometry">bib</a> | 
+<a href="https://CRAN.R-project.org/package=gridGeometry">http</a> ]
+
+</dd>
+      <dt>
+[<a name="pkg:vwline">Murrell, 2019b</a>]
+</dt>
+      <dd>
+Murrell, P. (2019b).
+ <em>vwline: Draw Variable-Width Lines</em>.
+ R package version 0.2-2.
+[ <a href="gggrid-bib_bib.html#pkg:vwline">bib</a> | 
+<a href="https://CRAN.R-project.org/package=vwline">http</a> ]
+
+</dd>
+      <dt>
 [<a name="R">R Core Team, 2019</a>]
 </dt>
       <dd>
@@ -968,6 +1103,19 @@ Sarkar, D. (2008).
  ISBN 978-0-387-75968-5.
 [ <a href="gggrid-bib_bib.html#lattice">bib</a> | 
 <a href="http://lmdvr.r-forge.r-project.org">http</a> ]
+
+</dd>
+      <dt>
+[<a name="wickham-GoG">Wickham, 2010</a>]
+</dt>
+      <dd>
+Wickham, H. (2010).
+ A layered grammar of graphics.
+ <em>Journal of Computational and Graphical Statistics</em>, 19(1):3--28.
+[ <a href="gggrid-bib_bib.html#wickham-GoG">bib</a> | 
+<a href="http://dx.doi.org/10.1198/jcgs.2009.07098">DOI</a> | 
+<a href="http://arxiv.org/abs/%20%0A%20%20%20%20%20%20%20%20https://doi.org/10.1198/jcgs.2009.07098%0A%20%20%20%20%0A">arXiv</a> | 
+<a href="https://doi.org/10.1198/jcgs.2009.07098%0A%20%20%20%20%0A">www:</a> ]
 
 </dd>
       <dt>

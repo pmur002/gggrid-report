@@ -29,6 +29,7 @@ RUN Rscript -e 'library(devtools); install_version("xml2", "1.3.2", repos="https
 
 # Packages used in the report
 RUN Rscript -e 'library(devtools); install_version("ggplot2", "3.3.3", repos="https://cran.rstudio.com/")'
+RUN Rscript -e 'library(devtools); install_version("vwline", "0.2-2", repos="https://cran.rstudio.com/")'
 
 # Package dependencies
 
