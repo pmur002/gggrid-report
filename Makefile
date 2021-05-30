@@ -35,7 +35,7 @@ docker:
 
 web:
 	make docker
-	cp -r ../gggrid-report/* ~/Web/Reports/dvir/gggrid/
+	cp -r ../gggrid-report/* ~/Web/Reports/gggrid/
 
 zip:
 	make docker

@@ -107,7 +107,7 @@
     </p>
     <p class="date">
     Version 1:
-Tuesday 25 May 2021
+Sunday 30 May 2021
   </p>
 
 
@@ -134,7 +134,7 @@ Tuesday 25 May 2021
     </p>
       <p>
       For example, the following code adds a rectangle filled with
-      a semitransparent radial gradient to a "ggplot".
+      a semitransparent radial gradient to a 'ggplot2' plot.
     </p>
 <div class="chunk" id="unnamed-chunk-3"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">library</span><span class="hl std">(gggrid)</span>
 <span class="hl std">grad</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">radialGradient</span><span class="hl std">(</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;transparent&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;black&quot;</span><span class="hl std">),</span> <span class="hl kwc">r2</span><span class="hl std">=</span><span class="hl num">.6</span><span class="hl std">)</span>
@@ -281,7 +281,8 @@ Tuesday 25 May 2021
     in 'ggplot2'.
   </p>
     <p>
-    One nice thing about a panel function is that it provides access to the
+    One nice thing about a 'lattice' 
+    panel function is that it provides access to the
     useful work that 'lattice' does, including splitting the
     data into groups and panels and setting up useful coordinate systems.
     The panel function is run within the context of the plot region,
@@ -329,7 +330,7 @@ Tuesday 25 May 2021
     and "coords" are central to this paradigm, but
     'grid' concepts like "units" and "viewports" are not.
     The 'grid' concepts may also be hidden away in 'ggplot2' because they
-    are perceived as too awkward or complex.
+    are perceived to be too awkward or complex.
   </p>
     <p>
     However, if we are already familiar with 'grid', rigid
@@ -451,9 +452,9 @@ Tuesday 25 May 2021
     Although 'ggplot2' uses basic 'grid' shapes to draw its Geoms,
     there are some 'grid' shapes, or 'grid'-based packages, that
     are not accessible from 'ggplot2'.  
-    For example, the 'vwline' package (<a href="#pkg:vwline"></a>)
+    For example, the 'vwline' package (<a href="#pkg:vwline">Murrell, 2019b</a>)
     draws variable-width lines
-    and the 'gridGeometry' package (<a href="#pkg:gridGeometry"></a>)
+    and the 'gridGeometry' package (<a href="#pkg:gridGeometry">Murrell, 2019a</a>)
     provides constructive geometry operations on 'grid' grobs.
   </p>
     <p>
@@ -488,7 +489,7 @@ Tuesday 25 May 2021
     There are two functions in the 'gggrid' package: 
     <code>grid_panel()</code> and <code>grid_group()</code>.
     Both functions add a new layer to a 'ggplot2' plot,
-    but they deliberately do not follow the typcial naming scheme
+    but they deliberately do not follow the typical naming scheme
     of <code>geom_*</code> or <code>stat_*</code> because
     these functions are not trying to strictly adhere to the
     'ggplot2' paradigm;  they add raw 'grid' drawing to
@@ -645,7 +646,7 @@ Tuesday 25 May 2021
     Another advantage of specifying a <code>grob</code> function
     is that it is evaluated for each panel.
     The following code demonstrates this by adding facetting 
-    (but just reusing the <code>rug</code> function);
+    (but just reusing the <code>rug()</code> function);
     we get a (different) rug added to each panel.
   </p>
 <div class="chunk" id="unnamed-chunk-22"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">ggplot</span><span class="hl std">(mtcars,</span> <span class="hl kwd">aes</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=disp,</span> <span class="hl kwc">y</span><span class="hl std">=mpg))</span> <span class="hl opt">+</span>
@@ -776,7 +777,8 @@ Tuesday 25 May 2021
     The following code makes use of the 'vwline' package to draw
     a variation on Minard's famous map.  The <code>grid_group()</code>
     function is useful here because there is no existing 'ggplot2' Geom 
-    interface, so we need direct access to the raw 'grid'-based function
+    interface to the 'vwline' package, 
+    so we need direct access to the raw 'grid'-based function
     <code>vwlineGrob()</code>.
   </p>
     <p>
@@ -784,9 +786,9 @@ Tuesday 25 May 2021
     <code>geom_*()</code> calls;  <code>grid_panel()</code>
     is the only layer in the plot.
     Furthermore, we make good use of the 'ggplot2' infrastructure
-    to set up the coordinate system for the plot using
-    <code>coord_fixed()</code> and the mapping from the number
-    of survivors to the line width using <code>scale_size()</code>.
+    to set up the coordinate system for the plot, using
+    <code>coord_fixed()</code>, and the mapping from the number
+    of survivors to the line width, using <code>scale_size()</code>.
     This makes our grob-generating function, <code>path()</code>,
     quite straightforward.
   </p>
@@ -887,6 +889,7 @@ Tuesday 25 May 2021
     <p>
     What the 'gggrid' package provides is full access to ALL 'grid'
     features, including units and viewports, gradient and pattern fills, 
+    and 'grid'-based drawing such as
     variable-width lines and constructive geometry.
   </p>
     <h3>Custom Geoms</h3>
@@ -945,7 +948,7 @@ Tuesday 25 May 2021
   </p>
     <p>
     In both cases, the functions that allow 'grid' grobs to be added to
-    a 'ggplot2' plot appear to be constrainted by their conformance
+    a 'ggplot2' plot appear to be constrained by their conformance
     to the 'ggplot2' philosophy.
     The 'gggrid' package deliberately ignores parts of the standard
     'ggplot2' approach
@@ -956,12 +959,12 @@ Tuesday 25 May 2021
     </h2>
     <p>
     The philosophy of the 'ggplot2' package has no room for 
-    of some important 'grid' concepts, like units and viewports.
+    some important 'grid' concepts, like units and viewports.
     This means that some things are harder to do than they
     need to be.
     The 'gggrid' package offers the opportunity to break with the
     orthodoxy in order to make some 
-    some things easier to draw.
+    things easier to draw.
   </p>
     <p>
     The goal of 'gggrid' is both to make it easy to perform simple
@@ -983,7 +986,8 @@ Tuesday 25 May 2021
     </h2>
     <p>
     The examples and discussion in this document relate to <a href="https://github.com/pmur002/gggrid/releases/tag/v0.1-0">version
-    0.1-0</a> of the 'gggrid' package.
+    0.1-0</a> of the 'gggrid' package.  Some examples also require 
+    R version 4.1.0 or later.
   </p>
     <p>
     This report was generated within a Docker container
