@@ -946,10 +946,6 @@ lapply(markers, drawLine)
       on <a href="https://github.com/pmur002/gggrid-report/releases/tag/v1">github</a>.
     </li>
     <li>
-      The LaTeX document used in one example is:
-      <a href="luaTikz.tex"><code>luaTikz.tex</code></a>.
-    </li>
-    <li>
       This report was generated within a 
       <a href="https://www.docker.com/">Docker</a> container.
       The Docker command to build the report is included in the Makefile above.
