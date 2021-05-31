@@ -976,13 +976,13 @@ lapply(markers, drawLine)
     </ul>
     <h2>How to cite this document</h2>
     <p>
-    Murrell, P. (2020). 
-    "'gggrid' it's g-g-great!" 
-    Technical Report 2021-??, Department of Statistics, 
+    Murrell, P. (2021). 
+    "Accessing 'grid' from 'ggplot2'" 
+    Technical Report 2021-01, Department of Statistics, 
     The University of Auckland. version 1. 
     [ <a href="how-to-cite.bib">bib</a> |
-      <a href="http://doi.org/">DOI</a> | 
-      <a href="http://stattech.blogs.auckland.ac.nz/">http</a> ]
+      <a href="http://doi.org/10.17608/k6.auckland.14703846">DOI</a> | 
+      <a href="http://stattech.blogs.auckland.ac.nz/2021/05/31/2021-01-accessing-grid-from-ggplot2/">http</a> ]
   </p>
     <h2>
       <a name="references">7. References</a>

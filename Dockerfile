@@ -34,9 +34,9 @@ RUN Rscript -e 'library(devtools); install_version("vwline", "0.2-2", repos="htt
 # Package dependencies
 
 # Using COPY will update (invalidate cache) if the tar ball has been modified!
-COPY gggrid_0.1-0.tar.gz .
-RUN R CMD INSTALL gggrid_0.1-0.tar.gz
-# RUN Rscript -e 'devtools::install_github("pmur002/gggrid@v0.1-0")'
+# COPY gggrid_0.1-0.tar.gz .
+# RUN R CMD INSTALL gggrid_0.1-0.tar.gz
+RUN Rscript -e 'devtools::install_github("pmur002/gggrid@v0.1-0")'
 
 RUN apt-get install -y locales && locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
